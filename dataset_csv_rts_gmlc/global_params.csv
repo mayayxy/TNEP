@@ -1,0 +1,13 @@
+﻿parameter,value,unit
+base_mva,100.0,MVA
+c_cap,28856.89759919694,USD/MWh-year
+c_shed,10000.0,USD/MWh
+c_curt,90.0,USD/MWh
+Gamma,130000000.0,USD/year
+rho,0.5,MW/MWh
+eta_c,0.922,
+eta_d,0.922,
+delta_t,1.0,hour
+use_scenario_noise,1,
+noise_level,0.05,
+noise_seed,2026,

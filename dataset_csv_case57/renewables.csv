@@ -1,0 +1,11 @@
+﻿r,ren_id,bus,capacity_mw,type
+R1,R1,49,220.0,wind
+R2,R2,50,180.0,wind
+R3,R3,52,140.0,solar
+R4,R4,53,150.0,solar
+R5,R5,55,200.0,wind
+R6,R6,56,160.0,solar
+R7,R7,57,210.0,wind
+R8,R8,44,120.0,wind
+R9,R9,45,130.0,solar
+R10,R10,46,110.0,wind

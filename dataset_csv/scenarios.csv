@@ -1,0 +1,7 @@
+﻿scenario,description,omega_days
+S1,Summer Peak,60.0
+S2,Winter Peak,55.0
+S3,Normal Day,120.0
+S4,Weekend Low,80.0
+S5,High Renewable,30.0
+S6,Stress Day,20.0

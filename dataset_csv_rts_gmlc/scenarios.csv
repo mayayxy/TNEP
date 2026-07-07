@@ -1,0 +1,13 @@
+﻿scenario,description,date,omega_days
+S1,Summer Peak,2020-08-26,35
+S2,Winter Peak,2020-12-21,35
+S3,Spring Normal,2020-04-10,45
+S4,Weekend Low,2020-03-29,52
+S5,High Renewable,2020-11-26,24
+S6,Stress Day,2020-07-24,20
+S7,Autumn Normal,2020-09-20,45
+S8,High Wind,2020-01-07,30
+S9,High Solar,2020-05-30,24
+S10,Shoulder Low,2020-11-27,25
+S11,Winter High Renewable,2020-02-01,15
+S12,Summer Stress,2020-07-26,15

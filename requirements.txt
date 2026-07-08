@@ -1,0 +1,3 @@
+pyomo>=6.6
+gurobipy>=11.0
+pypower>=5.1

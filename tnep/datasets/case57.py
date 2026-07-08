@@ -1,4 +1,4 @@
-"""构建 IEEE 57-bus TNEP 数据集（独立目录，不覆盖现有 dataset_csv）。"""
+"""IEEE 57-bus 数据集构建。"""
 
 from collections import deque
 import csv
@@ -15,7 +15,6 @@ NOISE_SEED = 2026
 
 DELTA_T_HOUR = 1.0
 DEMAND_BASE_SCALE = 0.58
-OUT_DIR = os.path.join(os.path.dirname(__file__), "dataset_csv_case57")
 
 
 def annualization_factor(discount_rate, lifetime):
@@ -49,7 +48,7 @@ def all_pair_shortest_hops(buses, existing_set):
     return hops
 
 
-def build_case57_dataset(out_dir):
+def build(out_dir):
     os.makedirs(out_dir, exist_ok=True)
     c = case57()
 
@@ -359,4 +358,6 @@ def build_case57_dataset(out_dir):
 
 
 if __name__ == "__main__":
-    build_case57_dataset(OUT_DIR)
+    from tnep.config import dataset_dir
+
+    build(dataset_dir("case57"))

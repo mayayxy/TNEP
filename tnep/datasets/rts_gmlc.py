@@ -1,4 +1,4 @@
-"""基于 RTS-GMLC 原始数据构建 TNEP 数据集（独立目录）。"""
+"""RTS-GMLC 数据集构建。"""
 
 from collections import defaultdict, deque
 import csv
@@ -7,14 +7,14 @@ import itertools
 import os
 import random
 
+from tnep.config import ROOT
 
 USE_SCENARIO_NOISE = True
 NOISE_LEVEL = 0.05
 NOISE_SEED = 2026
 
 DELTA_T_HOUR = 1.0
-OUT_DIR = os.path.join(os.path.dirname(__file__), "dataset_csv_rts_gmlc")
-RTS_ROOT = os.path.join(os.path.dirname(__file__), "RTS-GMLC", "RTS_Data")
+RTS_ROOT = os.path.join(ROOT, "RTS-GMLC", "RTS_Data")
 
 
 def annualization_factor(discount_rate, lifetime):
@@ -95,7 +95,7 @@ def pick_median_day(candidates, key_fn, used):
     raise ValueError("无法选取中位日期。")
 
 
-def build_rts_gmlc_dataset(out_dir):
+def build(out_dir):
     os.makedirs(out_dir, exist_ok=True)
     rng = random.Random(NOISE_SEED)
 
@@ -501,4 +501,6 @@ def build_rts_gmlc_dataset(out_dir):
 
 
 if __name__ == "__main__":
-    build_rts_gmlc_dataset(OUT_DIR)
+    from tnep.config import dataset_dir
+
+    build(dataset_dir("rts_gmlc"))

@@ -1,4 +1,4 @@
-"""构建 IEEE 300-bus TNEP 数据集（与 solve_tnep_case57.py 输入格式兼容）。"""
+"""IEEE 300-bus 数据集构建。"""
 
 from collections import deque
 import csv
@@ -15,7 +15,6 @@ NOISE_SEED = 2026
 
 DELTA_T_HOUR = 1.0
 DEMAND_BASE_SCALE = 0.72
-OUT_DIR = os.path.join(os.path.dirname(__file__), "dataset_csv_case300")
 
 
 def annualization_factor(discount_rate, lifetime):
@@ -69,7 +68,7 @@ def _marginal_cost_from_gencost(gencost_row, pmin, pmax):
     return 30.0
 
 
-def build_case300_dataset(out_dir):
+def build(out_dir):
     os.makedirs(out_dir, exist_ok=True)
     rng = random.Random(NOISE_SEED)
 
@@ -392,4 +391,6 @@ def build_case300_dataset(out_dir):
 
 
 if __name__ == "__main__":
-    build_case300_dataset(OUT_DIR)
+    from tnep.config import dataset_dir
+
+    build(dataset_dir("case300"))

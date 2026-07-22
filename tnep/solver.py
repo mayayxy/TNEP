@@ -8,7 +8,7 @@ from collections import defaultdict
 from pyomo.environ import SolverFactory, value
 
 from tnep.heuristics import apply_heuristic_fixings
-from tnep.model import build_model
+from tnep.model import build_model, shrink_tnep_data
 
 
 def pick_solver(preferred="gurobi"):
@@ -196,9 +196,16 @@ def solve_and_collect(
     gurobi_seed=None,
     allow_line=True,
     allow_storage=True,
+    param_overrides=None,
+    data_transform=None,
     print_header=True,
+    mip_rel_gap=0.01,
 ):
-    model, tnep_data = build_model(csv_dir)
+    model, tnep_data = build_model(
+        csv_dir,
+        param_overrides=param_overrides,
+        data_transform=data_transform,
+    )
     apply_investment_policy(model, allow_line=allow_line, allow_storage=allow_storage)
 
     solver_name = pick_solver(preferred=solver_preference)
@@ -231,7 +238,7 @@ def solve_and_collect(
     solver = configure_solver(
         solver_name,
         time_limit=time_limit,
-        mip_rel_gap=0.01,
+        mip_rel_gap=mip_rel_gap,
         gurobi_seed=gurobi_seed,
     )
     t0 = time.perf_counter()
@@ -370,10 +377,17 @@ def solve_compare(csv_dir, time_limit=120, exact_time_limit=None, heuristic_time
     return exact, heur
 
 
-def run_policy_comparison(csv_dir, time_limit=90, solver_preference="gurobi", mip_rel_gap=0.005):
+def run_policy_comparison(
+    csv_dir,
+    time_limit=90,
+    solver_preference="gurobi",
+    mip_rel_gap=0.005,
+    param_overrides=None,
+    data_transform=None,
+    gurobi_seed=None,
+):
     """四案例对比: No-Invest / Only-Line / Only-Storage / Joint。"""
-    solver_name = pick_solver(preferred=solver_preference)
-    print(f"使用求解器: {solver_name}")
+    print(f"使用求解器: {pick_solver(preferred=solver_preference)}")
     print("\n开始对比实验: No-Invest / Only-Line / Only-Storage / Joint")
 
     cases = [
@@ -384,28 +398,63 @@ def run_policy_comparison(csv_dir, time_limit=90, solver_preference="gurobi", mi
     ]
     results = []
     for case_name, allow_line, allow_storage in cases:
-        model, tnep_data = build_model(csv_dir)
-        apply_investment_policy(model, allow_line=allow_line, allow_storage=allow_storage)
-        solver = configure_solver(solver_name, time_limit=time_limit, mip_rel_gap=mip_rel_gap)
-        raw = solver.solve(model)
-        metrics = collect_solution_metrics(model)
-        term = str(raw.solver.termination_condition)
+        result = solve_and_collect(
+            csv_dir,
+            time_limit=time_limit,
+            solver_preference=solver_preference,
+            gurobi_seed=gurobi_seed,
+            allow_line=allow_line,
+            allow_storage=allow_storage,
+            param_overrides=param_overrides,
+            data_transform=data_transform,
+            print_header=False,
+            mip_rel_gap=mip_rel_gap,
+        )
         print(f"\n=== {case_name} ===")
-        print(f"终止状态: {term}")
-        print(f"目标函数值: {metrics['obj']:,.2f}")
-        print(f"EENS: {metrics['shed_total']:,.2f} MWh/year")
-        print(f"弃电: {metrics['curt_total']:,.2f} MWh/year")
-        print(f"已选线路: {len(metrics['selected_lines'])}, 已选储能: {len(metrics['selected_storage'])}")
-        results.append({"case": case_name, "termination": term, "metrics": metrics, "tnep_data": tnep_data})
+        print(f"终止状态: {result['termination_condition']}")
+        if result["obj"] is not None:
+            print(f"目标函数值: {result['obj']:,.2f}")
+            print(f"EENS: {result['shed_total']:,.2f} MWh/year")
+            print(f"弃电: {result['curt_total']:,.2f} MWh/year")
+            n_line = len(result["selected_lines"] or [])
+            n_stor = len(result["selected_storage"] or [])
+            print(f"已选线路: {n_line}, 已选储能: {n_stor}")
+        results.append({"case": case_name, **result})
 
-    baseline = results[0]["metrics"]
+    baseline = next((r for r in results if r["case"] == "No-Invest"), results[0])
     print("\n=== 对比汇总 (相对 No-Invest) ===")
     print("Case | Obj(USD/yr) | Delta Obj | EENS | Delta EENS | Curt")
     for r in results:
-        m = r["metrics"]
+        if r["obj"] is None or baseline.get("obj") is None:
+            print(f"{r['case']} | N/A")
+            continue
         print(
-            f"{r['case']} | {m['obj']:,.2f} | {m['obj'] - baseline['obj']:,.2f} | "
-            f"{m['shed_total']:,.2f} | {m['shed_total'] - baseline['shed_total']:,.2f} | "
-            f"{m['curt_total']:,.2f}"
+            f"{r['case']} | {r['obj']:,.2f} | {r['obj'] - baseline['obj']:,.2f} | "
+            f"{r['shed_total']:,.2f} | {r['shed_total'] - baseline['shed_total']:,.2f} | "
+            f"{r['curt_total']:,.2f}"
         )
     return results
+
+
+def make_lite_transform(
+    max_candidate_lines=5,
+    max_storage_sites=2,
+    keep_scenarios=None,
+    keep_periods=None,
+):
+    """构造受限许可证可用的数据压缩函数。"""
+    if keep_scenarios is None:
+        keep_scenarios = ["S3", "S6"]
+    if keep_periods is None:
+        keep_periods = [1, 2, 3]
+
+    def _transform(data):
+        return shrink_tnep_data(
+            data,
+            max_candidate_lines=max_candidate_lines,
+            max_storage_sites=max_storage_sites,
+            keep_scenarios=keep_scenarios,
+            keep_periods=keep_periods,
+        )
+
+    return _transform

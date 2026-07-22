@@ -52,8 +52,77 @@ def infer_line_electric_params(tnep_data):
     return fbar, b
 
 
-def build_model(csv_dir):
+def apply_param_overrides(tnep_data, overrides=None):
+    """就地覆盖全局经济参数，供敏感性分析使用。"""
+    if not overrides:
+        return tnep_data
+    for key, val in overrides.items():
+        if key not in tnep_data:
+            raise KeyError(f"无法覆盖未知参数: {key}")
+        tnep_data[key] = float(val)
+    return tnep_data
+
+
+def shrink_tnep_data(
+    tnep_data,
+    max_candidate_lines=20,
+    max_storage_sites=3,
+    keep_scenarios=None,
+    keep_periods=None,
+):
+    """缩小模型规模（适配 Gurobi 受限许可证 / 快速冒烟）。
+
+    - 截断候选线路与储能站点
+    - 可选保留部分代表日，并按比例重标定 omega 使总和仍为 365
+    - 可选保留部分时段（仅用于受限许可证冒烟；论文正式结果请用全时段）
+    """
+    data = dict(tnep_data)
+
+    if keep_scenarios is not None:
+        keep = [s for s in data["scenarios"] if s in set(keep_scenarios)]
+        if not keep:
+            raise ValueError("keep_scenarios 与数据场景无交集")
+        omega_keep = {s: data["omega"][s] for s in keep}
+        scale = 365.0 / max(sum(omega_keep.values()), 1e-9)
+        data["scenarios"] = keep
+        data["omega"] = {s: omega_keep[s] * scale for s in keep}
+
+    if keep_periods is not None:
+        keep_t = [t for t in data["periods"] if t in set(keep_periods)]
+        if not keep_t:
+            raise ValueError("keep_periods 与数据时段无交集")
+        data["periods"] = keep_t
+
+    scen_set = set(data["scenarios"])
+    period_set = set(data["periods"])
+    data["demand"] = {
+        k: v for k, v in data["demand"].items() if k[1] in scen_set and k[2] in period_set
+    }
+    data["wbar"] = {
+        k: v for k, v in data["wbar"].items() if k[1] in scen_set and k[2] in period_set
+    }
+
+    ranked_lines = sorted(data["candidate_lines"], key=lambda l: data["c_line"][l])
+    keep_lines = ranked_lines[: max(0, int(max_candidate_lines))]
+    data["candidate_lines"] = keep_lines
+    data["c_line"] = {l: data["c_line"][l] for l in keep_lines}
+    data["line_meta"] = {l: data["line_meta"][l] for l in keep_lines if l in data.get("line_meta", {})}
+
+    ranked_storage = sorted(
+        data["storage_sites"],
+        key=lambda h: data["storage_meta"][h]["c_fix"],
+    )
+    keep_h = ranked_storage[: max(0, int(max_storage_sites))]
+    data["storage_sites"] = keep_h
+    data["storage_meta"] = {h: data["storage_meta"][h] for h in keep_h}
+    return data
+
+
+def build_model(csv_dir, param_overrides=None, data_transform=None):
     tnep_data = load_tnep_data_from_csv(csv_dir)
+    if data_transform is not None:
+        tnep_data = data_transform(tnep_data)
+    apply_param_overrides(tnep_data, param_overrides)
     op = {
         "G": sorted(tnep_data["gen_meta"].keys()),
         "g_bus": {g: tnep_data["gen_meta"][g]["bus"] for g in tnep_data["gen_meta"]},

@@ -1,5 +1,5 @@
-# Experiment outputs (regenerate with run_experiments.py)
-results/
+# Paper manuscript stays local
+results/paper_draft/
 
 # Python
 __pycache__/

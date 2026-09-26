@@ -1,0 +1,540 @@
+{
+  "experiment": "sensitivity",
+  "csv_dir": "D:\\桌面\\TNEP\\dataset_csv",
+  "time_limit": 90,
+  "sweep": {
+    "Gamma": [
+      0.5,
+      0.75,
+      1.0,
+      1.25,
+      1.5
+    ],
+    "c_shed": [
+      0.5,
+      1.0,
+      2.0
+    ],
+    "c_curt": [
+      0.5,
+      1.0,
+      2.0,
+      5.0
+    ],
+    "c_cap": [
+      0.5,
+      0.75,
+      1.0,
+      1.25,
+      1.5
+    ]
+  },
+  "rows": [
+    {
+      "experiment": "sensitivity",
+      "case": "Joint",
+      "param_name": "Gamma",
+      "param_value": 7500000.0,
+      "param_mult": 0.5,
+      "termination": "optimal",
+      "ok": true,
+      "obj": 1477741869.2411935,
+      "op_cost": 1470241869.2411935,
+      "invest_line": 4079471.281622449,
+      "invest_stor": 3420528.7183775506,
+      "n_lines": 1,
+      "n_storage": 1,
+      "total_storage_mwh": 112.29650405897173,
+      "eens_mwh": 137840.68860006868,
+      "curt_mwh": 0.0,
+      "solve_time_sec": 0.11850089998915792,
+      "mip_gap": 1.6133980099243456e-16,
+      "selected_lines": [
+        [
+          1,
+          24
+        ]
+      ],
+      "selected_storage": [
+        6
+      ]
+    },
+    {
+      "experiment": "sensitivity",
+      "case": "Joint",
+      "param_name": "Gamma",
+      "param_value": 11250000.0,
+      "param_mult": 0.75,
+      "termination": "optimal",
+      "ok": true,
+      "obj": 1420058056.1671731,
+      "op_cost": 1408808056.1671731,
+      "invest_line": 4079471.281622449,
+      "invest_stor": 7170528.71837755,
+      "n_lines": 1,
+      "n_storage": 1,
+      "total_storage_mwh": 242.24810357202398,
+      "eens_mwh": 131698.61955567045,
+      "curt_mwh": 0.0,
+      "solve_time_sec": 0.12677470000926405,
+      "mip_gap": 0.0,
+      "selected_lines": [
+        [
+          1,
+          24
+        ]
+      ],
+      "selected_storage": [
+        6
+      ]
+    },
+    {
+      "experiment": "sensitivity",
+      "case": "Joint",
+      "param_name": "Gamma",
+      "param_value": 15000000.0,
+      "param_mult": 1.0,
+      "termination": "optimal",
+      "ok": true,
+      "obj": 1368038746.8190467,
+      "op_cost": 1353038746.8190467,
+      "invest_line": 4079471.281622449,
+      "invest_stor": 10920528.718377551,
+      "n_lines": 1,
+      "n_storage": 2,
+      "total_storage_mwh": 365.9620263084498,
+      "eens_mwh": 126116.35940061288,
+      "curt_mwh": 0.0,
+      "solve_time_sec": 0.12756699998863041,
+      "mip_gap": 0.0,
+      "selected_lines": [
+        [
+          1,
+          24
+        ]
+      ],
+      "selected_storage": [
+        6,
+        10
+      ]
+    },
+    {
+      "experiment": "sensitivity",
+      "case": "Joint",
+      "param_name": "Gamma",
+      "param_value": 18750000.0,
+      "param_mult": 1.25,
+      "termination": "optimal",
+      "ok": true,
+      "obj": 1318746791.0975313,
+      "op_cost": 1299996791.0975313,
+      "invest_line": 4079471.281622449,
+      "invest_stor": 14670528.718377551,
+      "n_lines": 1,
+      "n_storage": 2,
+      "total_storage_mwh": 495.913625821502,
+      "eens_mwh": 120826.40662672522,
+      "curt_mwh": 0.0,
+      "solve_time_sec": 0.16169950005132705,
+      "mip_gap": 0.0,
+      "selected_lines": [
+        [
+          1,
+          24
+        ]
+      ],
+      "selected_storage": [
+        6,
+        10
+      ]
+    },
+    {
+      "experiment": "sensitivity",
+      "case": "Joint",
+      "param_name": "Gamma",
+      "param_value": 22500000.0,
+      "param_mult": 1.5,
+      "termination": "optimal",
+      "ok": true,
+      "obj": 1282735446.4852517,
+      "op_cost": 1260981836.6441112,
+      "invest_line": 4079471.281622449,
+      "invest_stor": 17674138.559518162,
+      "n_lines": 1,
+      "n_storage": 2,
+      "total_storage_mwh": 600.0,
+      "eens_mwh": 116936.67687490364,
+      "curt_mwh": 0.0,
+      "solve_time_sec": 0.13949860003776848,
+      "mip_gap": 1.8586730393616182e-16,
+      "selected_lines": [
+        [
+          1,
+          24
+        ]
+      ],
+      "selected_storage": [
+        6,
+        10
+      ]
+    },
+    {
+      "experiment": "sensitivity",
+      "case": "Joint",
+      "param_name": "c_shed",
+      "param_value": 5000.0,
+      "param_mult": 0.5,
+      "termination": "optimal",
+      "ok": true,
+      "obj": 737456949.8159822,
+      "op_cost": 722456949.8159822,
+      "invest_line": 4079471.281622449,
+      "invest_stor": 10920528.718377551,
+      "n_lines": 1,
+      "n_storage": 2,
+      "total_storage_mwh": 365.9620263084498,
+      "eens_mwh": 126116.35940061288,
+      "curt_mwh": 0.0,
+      "solve_time_sec": 0.1145746000111103,
+      "mip_gap": 0.0,
+      "selected_lines": [
+        [
+          1,
+          24
+        ]
+      ],
+      "selected_storage": [
+        6,
+        10
+      ]
+    },
+    {
+      "experiment": "sensitivity",
+      "case": "Joint",
+      "param_name": "c_shed",
+      "param_value": 10000.0,
+      "param_mult": 1.0,
+      "termination": "optimal",
+      "ok": true,
+      "obj": 1368038746.8190467,
+      "op_cost": 1353038746.8190467,
+      "invest_line": 4079471.281622449,
+      "invest_stor": 10920528.718377551,
+      "n_lines": 1,
+      "n_storage": 2,
+      "total_storage_mwh": 365.9620263084498,
+      "eens_mwh": 126116.35940061288,
+      "curt_mwh": 0.0,
+      "solve_time_sec": 0.15900300000794232,
+      "mip_gap": 0.0,
+      "selected_lines": [
+        [
+          1,
+          24
+        ]
+      ],
+      "selected_storage": [
+        6,
+        10
+      ]
+    },
+    {
+      "experiment": "sensitivity",
+      "case": "Joint",
+      "param_name": "c_shed",
+      "param_value": 20000.0,
+      "param_mult": 2.0,
+      "termination": "optimal",
+      "ok": true,
+      "obj": 2629202340.8251753,
+      "op_cost": 2614202340.8251753,
+      "invest_line": 4079471.281622449,
+      "invest_stor": 10920528.718377551,
+      "n_lines": 1,
+      "n_storage": 2,
+      "total_storage_mwh": 365.9620263084498,
+      "eens_mwh": 126116.35940061288,
+      "curt_mwh": 0.0,
+      "solve_time_sec": 0.12070729990955442,
+      "mip_gap": 0.0,
+      "selected_lines": [
+        [
+          1,
+          24
+        ]
+      ],
+      "selected_storage": [
+        6,
+        10
+      ]
+    },
+    {
+      "experiment": "sensitivity",
+      "case": "Joint",
+      "param_name": "c_curt",
+      "param_value": 25.0,
+      "param_mult": 0.5,
+      "termination": "optimal",
+      "ok": true,
+      "obj": 1368038746.8190467,
+      "op_cost": 1353038746.8190467,
+      "invest_line": 4079471.281622449,
+      "invest_stor": 10920528.718377551,
+      "n_lines": 1,
+      "n_storage": 2,
+      "total_storage_mwh": 365.9620263084498,
+      "eens_mwh": 126116.35940061288,
+      "curt_mwh": 0.0,
+      "solve_time_sec": 0.11709790001623333,
+      "mip_gap": 0.0,
+      "selected_lines": [
+        [
+          1,
+          24
+        ]
+      ],
+      "selected_storage": [
+        6,
+        10
+      ]
+    },
+    {
+      "experiment": "sensitivity",
+      "case": "Joint",
+      "param_name": "c_curt",
+      "param_value": 50.0,
+      "param_mult": 1.0,
+      "termination": "optimal",
+      "ok": true,
+      "obj": 1368038746.8190467,
+      "op_cost": 1353038746.8190467,
+      "invest_line": 4079471.281622449,
+      "invest_stor": 10920528.718377551,
+      "n_lines": 1,
+      "n_storage": 2,
+      "total_storage_mwh": 365.9620263084498,
+      "eens_mwh": 126116.35940061288,
+      "curt_mwh": 0.0,
+      "solve_time_sec": 0.15294930001255125,
+      "mip_gap": 0.0,
+      "selected_lines": [
+        [
+          1,
+          24
+        ]
+      ],
+      "selected_storage": [
+        6,
+        10
+      ]
+    },
+    {
+      "experiment": "sensitivity",
+      "case": "Joint",
+      "param_name": "c_curt",
+      "param_value": 100.0,
+      "param_mult": 2.0,
+      "termination": "optimal",
+      "ok": true,
+      "obj": 1368038746.8190467,
+      "op_cost": 1353038746.8190467,
+      "invest_line": 4079471.281622449,
+      "invest_stor": 10920528.718377551,
+      "n_lines": 1,
+      "n_storage": 2,
+      "total_storage_mwh": 365.9620263084498,
+      "eens_mwh": 126116.35940061288,
+      "curt_mwh": 0.0,
+      "solve_time_sec": 0.1411728000966832,
+      "mip_gap": 0.0,
+      "selected_lines": [
+        [
+          1,
+          24
+        ]
+      ],
+      "selected_storage": [
+        6,
+        10
+      ]
+    },
+    {
+      "experiment": "sensitivity",
+      "case": "Joint",
+      "param_name": "c_curt",
+      "param_value": 250.0,
+      "param_mult": 5.0,
+      "termination": "optimal",
+      "ok": true,
+      "obj": 1368038746.8190467,
+      "op_cost": 1353038746.8190467,
+      "invest_line": 4079471.281622449,
+      "invest_stor": 10920528.718377551,
+      "n_lines": 1,
+      "n_storage": 2,
+      "total_storage_mwh": 365.9620263084498,
+      "eens_mwh": 126116.35940061288,
+      "curt_mwh": 0.0,
+      "solve_time_sec": 0.11787590000312775,
+      "mip_gap": 1.7427765087497084e-16,
+      "selected_lines": [
+        [
+          1,
+          24
+        ]
+      ],
+      "selected_storage": [
+        6,
+        10
+      ]
+    },
+    {
+      "experiment": "sensitivity",
+      "case": "Joint",
+      "param_name": "c_cap",
+      "param_value": 14428.44879959847,
+      "param_mult": 0.5,
+      "termination": "optimal",
+      "ok": true,
+      "obj": 1274078377.2054918,
+      "op_cost": 1260981836.6441102,
+      "invest_line": 4079471.281622449,
+      "invest_stor": 9017069.279759081,
+      "n_lines": 1,
+      "n_storage": 2,
+      "total_storage_mwh": 600.0,
+      "eens_mwh": 116936.67687490354,
+      "curt_mwh": 0.0,
+      "solve_time_sec": 0.14138000004459172,
+      "mip_gap": 1.8713022947968042e-16,
+      "selected_lines": [
+        [
+          1,
+          24
+        ]
+      ],
+      "selected_storage": [
+        6,
+        10
+      ]
+    },
+    {
+      "experiment": "sensitivity",
+      "case": "Joint",
+      "param_name": "c_cap",
+      "param_value": 21642.673199397705,
+      "param_mult": 0.75,
+      "termination": "optimal",
+      "ok": true,
+      "obj": 1318247538.2256286,
+      "op_cost": 1303247538.2256286,
+      "invest_line": 4079471.281622449,
+      "invest_stor": 10920528.718377551,
+      "n_lines": 1,
+      "n_storage": 2,
+      "total_storage_mwh": 487.94936841126633,
+      "eens_mwh": 121150.60845061296,
+      "curt_mwh": 0.0,
+      "solve_time_sec": 0.11651389999315143,
+      "mip_gap": 1.4468819986417771e-15,
+      "selected_lines": [
+        [
+          1,
+          24
+        ]
+      ],
+      "selected_storage": [
+        6,
+        10
+      ]
+    },
+    {
+      "experiment": "sensitivity",
+      "case": "Joint",
+      "param_name": "c_cap",
+      "param_value": 28856.89759919694,
+      "param_mult": 1.0,
+      "termination": "optimal",
+      "ok": true,
+      "obj": 1368038746.8190467,
+      "op_cost": 1353038746.8190467,
+      "invest_line": 4079471.281622449,
+      "invest_stor": 10920528.718377551,
+      "n_lines": 1,
+      "n_storage": 2,
+      "total_storage_mwh": 365.9620263084498,
+      "eens_mwh": 126116.35940061288,
+      "curt_mwh": 0.0,
+      "solve_time_sec": 0.120457399985753,
+      "mip_gap": 0.0,
+      "selected_lines": [
+        [
+          1,
+          24
+        ]
+      ],
+      "selected_storage": [
+        6,
+        10
+      ]
+    },
+    {
+      "experiment": "sensitivity",
+      "case": "Joint",
+      "param_name": "c_cap",
+      "param_value": 36071.121998996176,
+      "param_mult": 1.25,
+      "termination": "optimal",
+      "ok": true,
+      "obj": 1397688286.1708348,
+      "op_cost": 1382688286.1708348,
+      "invest_line": 4079471.281622449,
+      "invest_stor": 10920528.718377551,
+      "n_lines": 1,
+      "n_storage": 1,
+      "total_storage_mwh": 297.759762468061,
+      "eens_mwh": 129074.90085589176,
+      "curt_mwh": 0.0,
+      "solve_time_sec": 0.12103559996467084,
+      "mip_gap": 4.702580436677139e-05,
+      "selected_lines": [
+        [
+          1,
+          24
+        ]
+      ],
+      "selected_storage": [
+        6
+      ]
+    },
+    {
+      "experiment": "sensitivity",
+      "case": "Joint",
+      "param_name": "c_cap",
+      "param_value": 43285.34639879541,
+      "param_mult": 1.5,
+      "termination": "optimal",
+      "ok": true,
+      "obj": 1421033849.760763,
+      "op_cost": 1406033849.760763,
+      "invest_line": 4079471.281622449,
+      "invest_stor": 10920528.718377551,
+      "n_lines": 1,
+      "n_storage": 1,
+      "total_storage_mwh": 248.13313539005082,
+      "eens_mwh": 131420.46775230477,
+      "curt_mwh": 0.0,
+      "solve_time_sec": 0.1129054999910295,
+      "mip_gap": 0.0,
+      "selected_lines": [
+        [
+          1,
+          24
+        ]
+      ],
+      "selected_storage": [
+        6
+      ]
+    }
+  ]
+}

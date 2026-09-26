@@ -1,0 +1,111 @@
+{
+  "experiment": "policy_compare",
+  "csv_dir": "D:\\桌面\\TNEP\\dataset_csv",
+  "time_limit": 90,
+  "rows": [
+    {
+      "experiment": "policy_compare",
+      "case": "No-Invest",
+      "param_name": "",
+      "param_value": null,
+      "param_mult": null,
+      "termination": "optimal",
+      "ok": true,
+      "obj": 1784695262.2981572,
+      "op_cost": 1784695262.2981572,
+      "invest_line": 0.0,
+      "invest_stor": 0.0,
+      "n_lines": 0,
+      "n_storage": 0,
+      "total_storage_mwh": 0,
+      "eens_mwh": 169188.79202603936,
+      "curt_mwh": 0.0,
+      "solve_time_sec": 0.15904649998992682,
+      "mip_gap": 0.0,
+      "selected_lines": [],
+      "selected_storage": []
+    },
+    {
+      "experiment": "policy_compare",
+      "case": "Only-Line",
+      "param_name": "",
+      "param_value": null,
+      "param_mult": null,
+      "termination": "optimal",
+      "ok": true,
+      "obj": 1527507184.7802424,
+      "op_cost": 1523427713.49862,
+      "invest_line": 4079471.281622449,
+      "invest_stor": 0.0,
+      "n_lines": 1,
+      "n_storage": 0,
+      "total_storage_mwh": 0,
+      "eens_mwh": 143148.30223437067,
+      "curt_mwh": 0.0,
+      "solve_time_sec": 0.1687819000799209,
+      "mip_gap": 0.0,
+      "selected_lines": [
+        [
+          1,
+          24
+        ]
+      ],
+      "selected_storage": []
+    },
+    {
+      "experiment": "policy_compare",
+      "case": "Only-Storage",
+      "param_name": "",
+      "param_value": null,
+      "param_mult": null,
+      "termination": "optimal",
+      "ok": true,
+      "obj": 1562405559.8774292,
+      "op_cost": 1547822674.4866538,
+      "invest_line": 0.0,
+      "invest_stor": 14582885.390775433,
+      "n_lines": 0,
+      "n_storage": 2,
+      "total_storage_mwh": 492.87645499255757,
+      "eens_mwh": 145493.40439766127,
+      "curt_mwh": 0.0,
+      "solve_time_sec": 0.0784085999475792,
+      "mip_gap": 8.031934469185195e-06,
+      "selected_lines": [],
+      "selected_storage": [
+        6,
+        10
+      ]
+    },
+    {
+      "experiment": "policy_compare",
+      "case": "Joint",
+      "param_name": "",
+      "param_value": null,
+      "param_mult": null,
+      "termination": "optimal",
+      "ok": true,
+      "obj": 1368038746.8190467,
+      "op_cost": 1353038746.8190467,
+      "invest_line": 4079471.281622449,
+      "invest_stor": 10920528.718377551,
+      "n_lines": 1,
+      "n_storage": 2,
+      "total_storage_mwh": 365.9620263084498,
+      "eens_mwh": 126116.35940061288,
+      "curt_mwh": 0.0,
+      "solve_time_sec": 0.13014929997734725,
+      "mip_gap": 0.0,
+      "selected_lines": [
+        [
+          1,
+          24
+        ]
+      ],
+      "selected_storage": [
+        6,
+        10
+      ]
+    }
+  ]
+}

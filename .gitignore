@@ -23,3 +23,6 @@ gurobi.lic
 # OS
 Thumbs.db
 Desktop.ini
+
+# Local reference PDFs (not part of the code release)
+/*.pdf

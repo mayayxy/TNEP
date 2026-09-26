@@ -37,7 +37,7 @@ def normalize_time_limit(time_limit):
     return tl
 
 
-def configure_solver(solver_name, time_limit=120, mip_rel_gap=0.01, gurobi_seed=None):
+def configure_solver(solver_name, time_limit=120, mip_rel_gap=0.01, gurobi_seed=None, threads=None, logfile=None):
     solver = SolverFactory(solver_name)
     normalized_tl = normalize_time_limit(time_limit)
     if hasattr(solver, "config"):
@@ -62,6 +62,11 @@ def configure_solver(solver_name, time_limit=120, mip_rel_gap=0.01, gurobi_seed=
         solver.options["MIPGap"] = mip_rel_gap
         if gurobi_seed is not None:
             solver.options["Seed"] = int(gurobi_seed)
+        if threads is not None:
+            solver.options["Threads"] = int(threads)
+        if logfile:
+            solver.options["LogFile"] = str(logfile)
+            solver.options["LogToConsole"] = 1
     return solver
 
 
@@ -200,11 +205,16 @@ def solve_and_collect(
     data_transform=None,
     print_header=True,
     mip_rel_gap=0.01,
+    threads=None,
+    logfile=None,
+    complementarity=True,
+    mip_start=None,
 ):
     model, tnep_data = build_model(
         csv_dir,
         param_overrides=param_overrides,
         data_transform=data_transform,
+        complementarity=complementarity,
     )
     apply_investment_policy(model, allow_line=allow_line, allow_storage=allow_storage)
 
@@ -231,6 +241,20 @@ def solve_and_collect(
                 f"({heuristic_method})"
             )
 
+    use_warmstart = False
+    if mip_start:
+        ls = {tuple(x) if not isinstance(x, tuple) else x for x in (mip_start.get("selected_lines") or [])}
+        ss = set(mip_start.get("selected_storage") or [])
+        for l in model.LC:
+            model.y[l].set_value(1.0 if l in ls else 0.0)
+        for h in model.H:
+            model.z[h].set_value(1.0 if h in ss else 0.0)
+            if h not in ss:
+                model.E[h].set_value(0.0)
+        use_warmstart = True
+        if print_header:
+            print(f"MIP start: {len(ls)} 条线路, {len(ss)} 个储能站", flush=True)
+
     result = None
     solve_time_sec = None
     last_exc = None
@@ -240,10 +264,12 @@ def solve_and_collect(
         time_limit=time_limit,
         mip_rel_gap=mip_rel_gap,
         gurobi_seed=gurobi_seed,
+        threads=threads,
+        logfile=logfile,
     )
     t0 = time.perf_counter()
     try:
-        result = solver.solve(model, load_solutions=False)
+        result = solver.solve(model, load_solutions=False, warmstart=use_warmstart)
         solve_time_sec = time.perf_counter() - t0
     except Exception as e:
         solve_time_sec = time.perf_counter() - t0

@@ -5,6 +5,7 @@ import json
 import os
 from datetime import datetime
 
+from tnep.heuristics import select_heuristic_candidates
 from tnep.io import load_tnep_data_from_csv
 from tnep.solver import make_lite_transform, run_policy_comparison, solve_and_collect
 
@@ -137,12 +138,19 @@ def run_sensitivity_experiment(
     mip_rel_gap=0.01,
     gurobi_seed=None,
     heuristic=False,
+    heuristic_method="score",
+    heuristic_lines=10,
+    heuristic_storage=4,
     data_transform=None,
 ):
     """单参数敏感性扫描（联合规划）。"""
     print("\n" + "=" * 60)
     print("【敏感性分析】联合规划参数扫描")
     print("=" * 60)
+    if heuristic:
+        print(
+            f"启发式: {heuristic_method}, lines={heuristic_lines}, storage={heuristic_storage}"
+        )
 
     base = load_tnep_data_from_csv(csv_dir)
     if data_transform is not None:
@@ -168,6 +176,9 @@ def run_sensitivity_experiment(
                 param_overrides={param_name: value},
                 data_transform=data_transform,
                 heuristic=heuristic,
+                heuristic_method=heuristic_method,
+                heuristic_lines=heuristic_lines,
+                heuristic_storage=heuristic_storage,
                 print_header=False,
                 mip_rel_gap=mip_rel_gap,
             )
@@ -189,6 +200,23 @@ def run_sensitivity_experiment(
             else:
                 print(f"    失败: {row['termination']}")
 
+            # 每点增量落盘，避免长跑中断丢结果
+            ensure_results_dir(results_dir)
+            csv_path = os.path.join(results_dir, "sensitivity.csv")
+            json_path = os.path.join(results_dir, "sensitivity.json")
+            write_csv(csv_path, rows)
+            write_json(
+                json_path,
+                {
+                    "experiment": "sensitivity",
+                    "csv_dir": csv_dir,
+                    "time_limit": time_limit,
+                    "sweep": sweep,
+                    "rows": rows,
+                    "partial": True,
+                },
+            )
+
     ensure_results_dir(results_dir)
     csv_path = os.path.join(results_dir, "sensitivity.csv")
     json_path = os.path.join(results_dir, "sensitivity.json")
@@ -201,9 +229,120 @@ def run_sensitivity_experiment(
             "time_limit": time_limit,
             "sweep": sweep,
             "rows": rows,
+            "partial": False,
         },
     )
     print(f"\n敏感性分析结果已保存:\n  {csv_path}\n  {json_path}")
+    return rows
+
+
+def run_reduction_quality_experiment(
+    csv_dir,
+    results_dir,
+    line_ks=None,
+    storage_ks=None,
+    exact_n_lines=None,
+    exact_n_storage=None,
+    exact_lines=None,
+    exact_storage=None,
+):
+    """候选缩减质量：不求解 MILP，报告 Diversity/Score 集合相对全候选及参考 Exact 投资的覆盖。"""
+    print("\n" + "=" * 60)
+    print("【候选缩减质量】Diversity / Score 覆盖率")
+    print("=" * 60)
+
+    data = load_tnep_data_from_csv(csv_dir)
+    n_line = len(data["candidate_lines"])
+    n_stor = len(data["storage_sites"])
+    line_ks = line_ks or [10, 20, 40, 80, 150, n_line]
+    storage_ks = storage_ks or [4, 8, 12, 20, n_stor]
+    line_ks = sorted({min(int(k), n_line) for k in line_ks})
+    storage_ks = sorted({min(int(k), n_stor) for k in storage_ks})
+
+    exact_line_set = set(tuple(x) for x in exact_lines) if exact_lines else None
+    exact_stor_set = set(exact_storage) if exact_storage else None
+    ref_n_lines = len(exact_line_set) if exact_line_set is not None else exact_n_lines
+    ref_n_stor = len(exact_stor_set) if exact_stor_set is not None else exact_n_storage
+
+    rows = []
+    for k_l in line_ks:
+        for k_h in storage_ks:
+            div_l_list, div_h_list = select_heuristic_candidates(
+                data, max_lines=k_l, max_storage=k_h, method="diversity"
+            )
+            sco_l_list, sco_h_list = select_heuristic_candidates(
+                data, max_lines=k_l, max_storage=k_h, method="score"
+            )
+            div_l, div_h = set(div_l_list), set(div_h_list)
+            sco_l, sco_h = set(sco_l_list), set(sco_h_list)
+            row = {
+                "k_L": k_l,
+                "k_H": k_h,
+                "n_candidate_lines": n_line,
+                "n_storage_sites": n_stor,
+                "line_jaccard_div_score": (
+                    len(div_l & sco_l) / max(len(div_l | sco_l), 1)
+                ),
+                "storage_jaccard_div_score": (
+                    len(div_h & sco_h) / max(len(div_h | sco_h), 1)
+                ),
+                "exact_line_recall_cap": (
+                    None if not ref_n_lines else min(k_l, ref_n_lines) / float(ref_n_lines)
+                ),
+                "exact_storage_recall_cap": (
+                    None if not ref_n_stor else min(k_h, ref_n_stor) / float(ref_n_stor)
+                ),
+                "exact_line_recall": (
+                    None
+                    if exact_line_set is None
+                    else len(div_l & exact_line_set) / max(len(exact_line_set), 1)
+                ),
+                "exact_storage_recall": (
+                    None
+                    if exact_stor_set is None
+                    else len(div_h & exact_stor_set) / max(len(exact_stor_set), 1)
+                ),
+            }
+            rows.append(row)
+            print(
+                f"  k_L={k_l:3d} k_H={k_h:2d}  "
+                f"Jacc_L={row['line_jaccard_div_score']:.3f}  "
+                f"Jacc_H={row['storage_jaccard_div_score']:.3f}  "
+                f"RecallCap_L={row['exact_line_recall_cap']}  "
+                f"RecallCap_H={row['exact_storage_recall_cap']}"
+            )
+
+    payload = {
+        "experiment": "reduction_quality",
+        "csv_dir": csv_dir,
+        "n_candidate_lines": n_line,
+        "n_storage_sites": n_stor,
+        "exact_n_lines": ref_n_lines,
+        "exact_n_storage": ref_n_stor,
+        "rows": rows,
+    }
+    ensure_results_dir(results_dir)
+    json_path = os.path.join(results_dir, "reduction_quality.json")
+    csv_path = os.path.join(results_dir, "reduction_quality.csv")
+    write_json(json_path, payload)
+    fieldnames = [
+        "k_L",
+        "k_H",
+        "n_candidate_lines",
+        "n_storage_sites",
+        "line_jaccard_div_score",
+        "storage_jaccard_div_score",
+        "exact_line_recall_cap",
+        "exact_storage_recall_cap",
+        "exact_line_recall",
+        "exact_storage_recall",
+    ]
+    with open(csv_path, "w", newline="", encoding="utf-8-sig") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in rows:
+            writer.writerow({k: row.get(k) for k in fieldnames})
+    print(f"候选缩减质量已保存:\n  {csv_path}\n  {json_path}")
     return rows
 
 

@@ -118,7 +118,7 @@ def shrink_tnep_data(
     return data
 
 
-def build_model(csv_dir, param_overrides=None, data_transform=None):
+def build_model(csv_dir, param_overrides=None, data_transform=None, complementarity=True):
     tnep_data = load_tnep_data_from_csv(csv_dir)
     if data_transform is not None:
         tnep_data = data_transform(tnep_data)
@@ -168,6 +168,7 @@ def build_model(csv_dir, param_overrides=None, data_transform=None):
 
     m.Fbar = Param(m.L, initialize=fbar)
     m.Bline = Param(m.L, initialize={l: b_param[l] * tnep_data["base_mva"] for l in b_param})
+    # M_l = b_l^{p.u.} * S_base * theta_max；与 ang_diff（所有 l∈L0∪LC）配套，保证 big-M 有效。
     m.M = Param(
         m.LC,
         initialize={l: b_param[l] * op["theta_max"] * tnep_data["base_mva"] for l in tnep_data["candidate_lines"]},
@@ -268,8 +269,29 @@ def build_model(csv_dir, param_overrides=None, data_transform=None):
     )
     m.gen_bound = Constraint(m.G, m.S, m.T, rule=lambda model, g, s, t: model.p[g, s, t] <= model.Pmax[g])
     m.ren_bound = Constraint(m.R, m.S, m.T, rule=lambda model, r, s, t: model.w[r, s, t] <= model.Wbar[r, s, t])
-    m.stor_discharge = Constraint(m.H, m.S, m.T, rule=lambda model, h, s, t: model.e_plus[h, s, t] <= model.rho * model.E[h])
-    m.stor_charge = Constraint(m.H, m.S, m.T, rule=lambda model, h, s, t: model.e_minus[h, s, t] <= model.rho * model.E[h])
+    if complementarity:
+        # 充放电互斥：u_ch=1 仅允许充电，u_ch=0 仅允许放电。
+        m.u_ch = Var(m.H, m.S, m.T, domain=Binary)
+        m.stor_discharge = Constraint(
+            m.H,
+            m.S,
+            m.T,
+            rule=lambda model, h, s, t: model.e_plus[h, s, t] <= model.rho * model.E[h] * (1 - model.u_ch[h, s, t]),
+        )
+        m.stor_charge = Constraint(
+            m.H,
+            m.S,
+            m.T,
+            rule=lambda model, h, s, t: model.e_minus[h, s, t] <= model.rho * model.E[h] * model.u_ch[h, s, t],
+        )
+    else:
+        # 投资评估用连续松弛：η_c η_d<1 时与互斥共享最优目标，固定 y,z 后为 LP。
+        m.stor_discharge = Constraint(
+            m.H, m.S, m.T, rule=lambda model, h, s, t: model.e_plus[h, s, t] <= model.rho * model.E[h]
+        )
+        m.stor_charge = Constraint(
+            m.H, m.S, m.T, rule=lambda model, h, s, t: model.e_minus[h, s, t] <= model.rho * model.E[h]
+        )
     m.soc_dyn = Constraint(
         m.H,
         m.S,

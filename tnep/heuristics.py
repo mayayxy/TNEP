@@ -43,6 +43,12 @@ def build_storage_scores(tnep_data):
 
 
 def select_heuristic_candidates(tnep_data, max_lines=10, max_storage=4, method="score"):
+    if method == "all":
+        lines = list(tnep_data["candidate_lines"])[: max(0, int(max_lines))]
+        storage = list(tnep_data["storage_sites"])[: max(0, int(max_storage))]
+        return lines, storage
+    if method == "shed_union":
+        return select_shed_union_candidates(tnep_data, max_lines=max_lines, max_storage=max_storage)
     load_bus, ren_bus, _ = build_bus_energy_stats(tnep_data)
     net = {b: load_bus[b] - ren_bus[b] for b in tnep_data["buses"]}
     deficit = {b: max(0.0, net[b]) for b in tnep_data["buses"]}
@@ -116,6 +122,95 @@ def select_heuristic_candidates(tnep_data, max_lines=10, max_storage=4, method="
         selected_storage = [h for _, h in storage_scores[: min(max_storage, len(storage_scores))]]
 
     return selected_lines, selected_storage
+
+
+def build_local_shed_by_bus(tnep_data):
+    """不计网络：本地可再生+常规满发仍不能满足的年切负荷能量。"""
+    gen_cap = defaultdict(float)
+    for _g, meta in tnep_data["gen_meta"].items():
+        gen_cap[meta["bus"]] += float(meta["pmax"])
+    ren_ids = defaultdict(list)
+    for rid, meta in tnep_data["renewable_meta"].items():
+        ren_ids[meta["bus"]].append(rid)
+    shed = defaultdict(float)
+    for s in tnep_data["scenarios"]:
+        w = tnep_data["omega"][s]
+        for t in tnep_data["periods"]:
+            for b in tnep_data["buses"]:
+                demand = tnep_data["demand"][(b, s, t)]
+                ren = sum(tnep_data["wbar"][(rid, s, t)] for rid in ren_ids[b])
+                remain = demand - min(demand, ren) - gen_cap[b]
+                shed[b] += w * max(0.0, remain) * tnep_data["delta_t"]
+    return shed
+
+
+def select_shed_union_candidates(tnep_data, max_lines=80, max_storage=16):
+    """评分 Top-k 与高切负荷母线走廊取并，扩大池子以覆盖供电缺口通道。"""
+    shed = build_local_shed_by_bus(tnep_data)
+    score_lines, score_storage = select_heuristic_candidates(
+        tnep_data, max_lines=max_lines, max_storage=max_storage, method="score"
+    )
+    line_shed_scores = []
+    for l in tnep_data["candidate_lines"]:
+        i, j = l
+        c = max(1.0, tnep_data["c_line"][l])
+        line_shed_scores.append(((shed[i] + shed[j]) / c, l))
+    line_shed_scores.sort(key=lambda x: x[0], reverse=True)
+    shed_lines = [l for _, l in line_shed_scores]
+
+    selected_lines = []
+    seen = set()
+    for src in (score_lines, shed_lines):
+        for l in src:
+            if l in seen:
+                continue
+            selected_lines.append(l)
+            seen.add(l)
+            if len(selected_lines) >= max_lines:
+                break
+        if len(selected_lines) >= max_lines:
+            break
+
+    hot_buses = [b for b, v in sorted(shed.items(), key=lambda x: -x[1]) if v > 0]
+    selected_storage = []
+    seen_h = set()
+    for h in hot_buses:
+        if h in tnep_data["storage_sites"] and h not in seen_h:
+            selected_storage.append(h)
+            seen_h.add(h)
+        if len(selected_storage) >= max_storage:
+            break
+    for h in score_storage:
+        if h not in seen_h:
+            selected_storage.append(h)
+            seen_h.add(h)
+        if len(selected_storage) >= max_storage:
+            break
+    return selected_lines, selected_storage
+
+
+def rank_diversity_candidates(tnep_data):
+    """按多样性规则给出全部候选线路/储能的入选顺序（不截断）。"""
+    n_line = len(tnep_data["candidate_lines"])
+    n_stor = len(tnep_data["storage_sites"])
+    lines, storage = select_heuristic_candidates(
+        tnep_data,
+        max_lines=n_line,
+        max_storage=n_stor,
+        method="diversity",
+    )
+    score_lines, score_storage = select_heuristic_candidates(
+        tnep_data,
+        max_lines=n_line,
+        max_storage=n_stor,
+        method="score",
+    )
+    return {
+        "diversity_lines": lines,
+        "diversity_storage": storage,
+        "score_lines": score_lines,
+        "score_storage": score_storage,
+    }
 
 
 def apply_heuristic_fixings(

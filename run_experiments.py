@@ -14,6 +14,7 @@ from tnep.config import CASES, dataset_dir, list_cases
 from tnep.experiments import (
     DEFAULT_SENSITIVITY,
     run_comparison_experiment,
+    run_reduction_quality_experiment,
     run_sensitivity_experiment,
     write_summary_markdown,
 )
@@ -26,15 +27,23 @@ def main():
     parser.add_argument("--csv-dir", default=None, help="自定义数据目录（覆盖 --case）")
     parser.add_argument(
         "--only",
-        choices=["all", "comparison", "sensitivity"],
+        choices=["all", "comparison", "sensitivity", "reduction"],
         default="all",
-        help="只跑对比 / 只跑敏感性 / 全部",
+        help="只跑对比 / 只跑敏感性 / 只跑候选缩减质量 / 全部",
     )
     parser.add_argument("--time-limit", type=int, default=90, help="单次求解时间上限（秒）")
     parser.add_argument("--mip-gap", type=float, default=0.01, help="MIP 相对 gap")
     parser.add_argument("--solver", choices=["gurobi", "auto"], default="gurobi")
     parser.add_argument("--gurobi-seed", type=int, default=2026)
     parser.add_argument("--heuristic", action="store_true", help="敏感性分析时启用启发式")
+    parser.add_argument(
+        "--heuristic-method",
+        choices=["score", "bridge", "budget_greedy", "diversity"],
+        default="diversity",
+        help="启发式策略（仅 --heuristic 时生效）",
+    )
+    parser.add_argument("--heuristic-lines", type=int, default=10)
+    parser.add_argument("--heuristic-storage", type=int, default=4)
     parser.add_argument(
         "--lite",
         action="store_true",
@@ -80,6 +89,16 @@ def main():
     comparison_rows = []
     sensitivity_rows = []
 
+    if args.only in ("all", "reduction"):
+        exact_n_lines = 19 if args.case == "case300" else None
+        exact_n_storage = 10 if args.case == "case300" else None
+        run_reduction_quality_experiment(
+            csv_dir,
+            results_dir,
+            exact_n_lines=exact_n_lines,
+            exact_n_storage=exact_n_storage,
+        )
+
     if args.only in ("all", "comparison"):
         comparison_rows = run_comparison_experiment(csv_dir, results_dir, **common)
 
@@ -98,6 +117,9 @@ def main():
             results_dir,
             params=sweep,
             heuristic=args.heuristic,
+            heuristic_method=args.heuristic_method,
+            heuristic_lines=args.heuristic_lines,
+            heuristic_storage=args.heuristic_storage,
             **common,
         )
 

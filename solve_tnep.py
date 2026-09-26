@@ -8,6 +8,7 @@
 """
 
 import argparse
+import os
 
 from tnep.config import CASES, dataset_dir, list_cases
 from tnep.solver import run_policy_comparison, solve_compare, solve_once
@@ -42,6 +43,32 @@ def main():
     )
     parser.add_argument("--solver", choices=["gurobi", "auto"], default="gurobi", help="求解器（默认 Gurobi，auto 同 gurobi）")
     parser.add_argument("--gurobi-seed", type=int, default=None, help="Gurobi 随机种子")
+    parser.add_argument(
+        "--mip-gap",
+        type=float,
+        default=0.01,
+        help="MIP 相对 gap 容差（默认 0.01=1%%；精确求解可设 0.001 或 0）",
+    )
+    parser.add_argument("--alns", action="store_true", help="启用 ALNS 搜索投资决策")
+    parser.add_argument("--alns-time-limit", type=int, default=1200, help="ALNS 阶段时限（秒）")
+    parser.add_argument("--alns-then-exact", action="store_true", help="(默认) ALNS 后热启动精确求解；与 --alns-only 互斥")
+    parser.add_argument("--alns-only", action="store_true", help="只跑 ALNS，不启动精确求解")
+    parser.add_argument("--alns-pool-lines", type=int, default=120, help="ALNS/GA/Tabu 候选线路池大小")
+    parser.add_argument("--alns-pool-storage", type=int, default=20, help="ALNS/GA/Tabu 候选储能池大小")
+    parser.add_argument(
+        "--alns-pool-method",
+        choices=["score", "bridge", "budget_greedy", "diversity", "shed_union", "all"],
+        default="all",
+        help="候选池: all=全部候选; shed_union=评分∪切负荷走廊",
+    )
+    parser.add_argument("--alns-max-lines", type=int, default=25, help="ALNS 解中最多线路数")
+    parser.add_argument("--alns-max-storage", type=int, default=12, help="ALNS 解中最多储能站数")
+    parser.add_argument("--alns-eval-time", type=int, default=60, help="ALNS 每次邻域评估时限（秒）")
+    parser.add_argument("--alns-seed", type=int, default=1, help="ALNS 随机种子")
+    parser.add_argument("--ga", action="store_true", help="遗传算法搜索投资决策")
+    parser.add_argument("--tabu", action="store_true", help="禁忌搜索投资决策")
+    parser.add_argument("--meta-time-limit", type=int, default=1200, help="GA/Tabu 各自搜索时限（秒）")
+    parser.add_argument("--meta-eval-time", type=int, default=90, help="GA/Tabu 每次适应度评估时限（秒）")
     args = parser.parse_args()
 
     csv_dir = resolve_csv_dir(args)
@@ -54,9 +81,51 @@ def main():
         "heuristic_method": args.heuristic_method,
         "solver_preference": args.solver,
         "gurobi_seed": args.gurobi_seed,
+        "mip_rel_gap": args.mip_gap,
     }
 
-    if args.policy_compare:
+    if args.ga or args.tabu:
+        from tnep.metaheuristics import run_ga_tabu_pipeline
+
+        methods = []
+        if args.ga:
+            methods.append("ga")
+        if args.tabu:
+            methods.append("tabu")
+        run_ga_tabu_pipeline(
+            csv_dir,
+            methods=tuple(methods),
+            search_time=args.meta_time_limit,
+            eval_time_limit=args.meta_eval_time,
+            pool_lines=args.alns_pool_lines,
+            pool_storage=args.alns_pool_storage,
+            pool_method=args.alns_pool_method,
+            max_lines=args.alns_max_lines,
+            max_storage=args.alns_max_storage,
+            seed=args.alns_seed,
+            solver_preference=args.solver,
+            out_dir=os.path.join("results", "case300_metaheuristics_v2") if args.case == "case300" else os.path.join("results", "metaheuristics"),
+        )
+    elif args.alns:
+        from tnep.alns import solve_alns_pipeline
+
+        exact_tl = args.exact_time_limit if args.exact_time_limit is not None else args.time_limit
+        solve_alns_pipeline(
+            csv_dir,
+            alns_time_limit=args.alns_time_limit,
+            exact_time_limit=exact_tl,
+            mip_rel_gap=args.mip_gap,
+            pool_lines=args.alns_pool_lines,
+            pool_storage=args.alns_pool_storage,
+            pool_method=args.alns_pool_method,
+            max_lines=args.alns_max_lines,
+            max_storage=args.alns_max_storage,
+            seed=args.alns_seed,
+            solver_preference=args.solver,
+            then_exact=not args.alns_only,
+            eval_time_limit=args.alns_eval_time,
+        )
+    elif args.policy_compare:
         run_policy_comparison(csv_dir, time_limit=args.time_limit, solver_preference=args.solver)
     elif args.compare:
         solve_compare(
